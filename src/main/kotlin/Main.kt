@@ -1,3 +1,5 @@
+import monopoly.application.GameApplication
+
 fun main() {
-    println("Hello world")
+    GameApplication().run()
 }
