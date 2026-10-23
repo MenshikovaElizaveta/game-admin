@@ -114,7 +114,7 @@ class GameMenu(
     private fun cardSetupMenu(game: GameSession) {
         while (game.active) {
             output.println()
-            output.println("К1 — Настройка колод")
+            output.println("Настройка колод")
             output.println("1 — Расставить карты вручную")
             output.println("2 — Оставить карты по порядку")
             output.println("3 — Завершить создание игры")
@@ -155,7 +155,6 @@ class GameMenu(
 
     private fun startGame(game: GameSession) {
         output.println("Игра ${game.id} началась.")
-        output.println("Ход игрока ${game.currentPlayer.name}")
         gameLoop(game)
     }
 
@@ -163,6 +162,7 @@ class GameMenu(
         while (game.active) {
             output.println()
             output.println("Игра ${game.id}. Сейчас ходит ${game.currentPlayer.name}.")
+            output.println("Текущая клетка: ${game.board.getCell(game.currentPlayer.position).name} (№${game.currentPlayer.position}). Баланс: ${game.currentPlayer.balance} М.")
             output.println("1 — Сделать ход")
             output.println("2 — Сохранить игру и выйти в главное меню")
             when (input.readLine().trim()) {
@@ -231,6 +231,7 @@ class GameMenu(
 
     private fun addLandingDescription(game: GameSession, player: Player, builder: MoveDescriptionBuilder) {
         val cell = game.board.getCell(player.position)
+        output.println("Игрок ${player.name} переместился на клетку «${cell.name}».")
         builder.movedTo(cell.name, cell.number)
     }
 
@@ -380,7 +381,7 @@ class GameMenu(
 
     private fun buyMenu(game: GameSession, player: Player, property: Property, builder: MoveDescriptionBuilder) {
         while (true) {
-            output.println("А4 — Недвижимость свободна: «${property.name}», цена ${property.price} М")
+            output.println("Недвижимость свободна: «${property.name}», цена ${property.price} М")
             output.println("1 — Купить")
             output.println("2 — Отказаться")
             when (input.readLine().trim()) {
@@ -404,7 +405,7 @@ class GameMenu(
 
     private fun actionMenu(game: GameSession, player: Player, builder: MoveDescriptionBuilder) {
         while (true) {
-            output.println("А3 — Действия с недвижимостью")
+            output.println("Действия с недвижимостью")
             output.println("1 — Построить дом")
             output.println("2 — Продать дом")
             output.println("3 — Заложить землю")
@@ -428,7 +429,7 @@ class GameMenu(
 
     private fun debtMenu(debtor: Player, creditor: Player, amount: Int, builder: MoveDescriptionBuilder) {
         while (true) {
-            output.println("А5 — Долг игроку ${creditor.name}: $amount М")
+            output.println("Долг игроку ${creditor.name}: $amount М")
             output.println("1 — Оплатить аренду")
             output.println("2 — Продать дом")
             output.println("3 — Заложить землю")
@@ -457,7 +458,7 @@ class GameMenu(
 
     private fun handleBankDebt(game: GameSession, player: Player, amount: Int, reason: String, builder: MoveDescriptionBuilder) {
         while (true) {
-            output.println("В4 — Долг банку: $amount М ($reason)")
+            output.println("Долг банку: $amount М ($reason)")
             output.println("1 — Заплатить")
             output.println("2 — Продать дом")
             output.println("3 — Заложить землю")
