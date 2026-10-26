@@ -90,14 +90,14 @@ class GameMenu(
         }
 
         val game = GameSession(
-            id = UUID.randomUUID().toString(),
+            id = gameRepository.nextId(),
             players = players,
             board = CellFactory.createBoard(),
             chanceDeck = CardFactory.createChanceDeck(),
             communityChestDeck = CardFactory.createCommunityChestDeck(),
         )
         gameRepository.save(game)
-        output.println("Игра создана. ID: ${game.id}")
+        output.println("Игра №${game.id} создана.")
         cardSetupMenu(game)
     }
 
@@ -154,17 +154,17 @@ class GameMenu(
     }
 
     private fun startGame(game: GameSession) {
-        output.println("Игра ${game.id} началась.")
+        output.println("Игра №${game.id} началась.")
         gameLoop(game)
     }
 
     private fun gameLoop(game: GameSession) {
         while (game.active) {
             output.println()
-            output.println("Игра ${game.id}. Сейчас ходит ${game.currentPlayer.name}.")
+            output.println("Игра №${game.id}. Сейчас ходит ${game.currentPlayer.name}.")
             output.println("Текущая клетка: ${game.board.getCell(game.currentPlayer.position).name} (№${game.currentPlayer.position}). Баланс: ${game.currentPlayer.balance} М.")
             output.println("1 — Сделать ход")
-            output.println("2 — Сохранить игру и выйти в главное меню")
+            output.println("2 — Вернуться в главное меню")
             when (input.readLine().trim()) {
                 "1" -> {
                     val turnCompleted = playTurn(game)
@@ -178,7 +178,7 @@ class GameMenu(
                 "2" -> {
                     gameRepository.save(game)
                     moveHistoryRepository.save(game.moveHistory)
-                    output.println("Игра сохранена. ID: ${game.id}")
+                    output.println("Игра №${game.id} сохранена.")
                     return
                 }
                 else -> output.println("Некорректный ввод.")
@@ -389,13 +389,15 @@ class GameMenu(
                     try {
                         PropertyService.buy(player, property)
                         builder.boughtProperty(property.name, property.price)
+                        if (!player.bankrupt) actionMenu(game, player, builder)
                         return
                     } catch (e: IllegalArgumentException) {
                         output.println(e.message ?: "Покупка невозможна.")
                     }
                 }
                 "2" -> {
-                    startAuction(game, listOf(property))
+                    startAuction(game, listOf(property), builder)
+                    if (!player.bankrupt) actionMenu(game, player, builder)
                     return
                 }
                 else -> output.println("Некорректный ввод.")
@@ -486,6 +488,7 @@ class GameMenu(
 
     private fun handleCard(game: GameSession, player: Player, deck: Deck, builder: MoveDescriptionBuilder) {
         val result = cardService.draw(player, deck)
+        output.println("Вытянута карточка: ${result.card.text}")
         builder.cardDrawn(result.card.text)
         when (val card = result.card) {
             is DeductionCard -> handleBankDebt(game, player, card.amount, "эффект карточки", builder)
@@ -500,7 +503,6 @@ class GameMenu(
                 }
             }
         }
-        builder.cardEffect(result.card.text)
     }
 
     private fun buildHouseMenu(player: Player, builder: MoveDescriptionBuilder) {
@@ -569,7 +571,7 @@ class GameMenu(
         return property
     }
 
-    private fun startAuction(game: GameSession, properties: List<Property>) {
+    private fun startAuction(game: GameSession, properties: List<Property>,  builder: MoveDescriptionBuilder) {
         auctionService.auction(
             properties = properties,
             players = game.players,
@@ -577,15 +579,18 @@ class GameMenu(
                 output.println(prompt)
                 input.readLine()
             },
-            onMessage = output::println,
+            onMessage = { message ->
+                output.println(message)
+                if (message.startsWith("«") || message.startsWith("Лот «")) builder.cellEffect("Результат аукциона: $message")
+            },
         )
     }
 
     private fun bankruptToBank(game: GameSession, player: Player, builder: MoveDescriptionBuilder) {
         val properties = player.properties.toList()
         val lots = bankruptcyService.bankruptToBank(player, properties)
-        if (lots.isNotEmpty()) startAuction(game, lots)
         builder.bankruptcy(player.name)
+        if (lots.isNotEmpty()) startAuction(game, lots, builder)
     }
 
     private fun saveMove(game: GameSession, move: Move) {
@@ -618,7 +623,7 @@ class GameMenu(
     }
 
     private fun continueGame() {
-        val games = gameRepository.findAll()
+        val games = gameRepository.findAll().filter { it.active }
         if (games.isEmpty()) {
             output.println("Незавершённых игр нет.")
             return
@@ -627,7 +632,7 @@ class GameMenu(
         games.forEach { game ->
             output.println("${game.id} — ${game.players.joinToString(", ") { it.name }}")
         }
-        output.println("Введите ID игры или 0 для возврата:")
+        output.println("Введите номер игры или 0 для возврата:")
         val id = input.readLine().trim()
         if (id == "0") return
         val game = gameRepository.findById(id)
@@ -656,21 +661,21 @@ class GameMenu(
         }
         history.forEach {
             output.println(
-                "Игра ${it.gameId}: игроки — ${it.playerNames.joinToString(", ")}, " +
+                "Игра №${it.gameId}: игроки — ${it.playerNames.joinToString(", ")}, " +
                     "ходов — ${it.moveCount}, победитель — ${it.winnerName}",
             )
         }
     }
 
     private fun showMoveHistory() {
-        output.println("Введите ID игры:")
+        output.println("Введите номер игры:")
         val id = input.readLine().trim()
         val history: MoveHistory? = moveHistoryRepository.findByGameId(id)
         if (history == null) {
             output.println("История ходов не найдена.")
             return
         }
-        output.println("История игры ${history.gameId}. Ходов: ${history.moveCount}")
+        output.println("История игры №${history.gameId}. Ходов: ${history.moveCount}")
         history.moves.forEach { move ->
             output.println("Ход №${move.number}, игрок ${move.playerName}")
             move.descriptions.forEach { description -> output.println("  $description") }

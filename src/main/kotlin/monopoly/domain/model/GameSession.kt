@@ -14,6 +14,7 @@ class GameSession(
         private set
     var active: Boolean = true
         private set
+    var turnInProgress: Boolean = false
 
     val moveHistory = MoveHistory(id)
 
@@ -31,7 +32,13 @@ class GameSession(
         active = false
     }
 
+    fun restoreCurrentPlayer(index: Int) {
+        require(index in players.indices)
+        currentPlayerIndex = index
+    }
+
     fun moveToNextActivePlayer(): Player? {
+        turnInProgress = false
         val alive = players.filterNot { it.bankrupt }
         if (alive.size <= 1) return alive.firstOrNull()
 

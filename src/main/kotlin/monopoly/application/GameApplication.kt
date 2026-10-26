@@ -1,10 +1,14 @@
 package monopoly.application
 
-import monopoly.domain.model.GameSession
-import monopoly.infrastructure.memory.InMemoryGameRepository
-import monopoly.infrastructure.memory.InMemoryGameStatisticsRepository
-import monopoly.infrastructure.memory.InMemoryGameHistoryRepository
-import monopoly.infrastructure.memory.InMemoryMoveHistoryRepository
+import monopoly.infrastructure.database.SqliteDatabase
+import monopoly.infrastructure.database.SqliteGameHistoryRepository
+import monopoly.infrastructure.database.SqliteGameRepository
+import monopoly.infrastructure.database.SqliteMoveHistoryRepository
+import monopoly.infrastructure.database.SqlitePlayerStatisticsRepository
+import monopoly.infrastructure.file.FileGameRepository
+import monopoly.infrastructure.file.FilePlayerStatisticsRepository
+import monopoly.infrastructure.file.FileGameHistoryRepository
+import monopoly.infrastructure.file.FileMoveHistoryRepository
 import monopoly.ui.ConsoleInput
 import monopoly.ui.ConsoleOutput
 import monopoly.ui.GameMenu
@@ -13,10 +17,11 @@ class GameApplication(
     private val input: ConsoleInput = ConsoleInput(),
     private val output: ConsoleOutput = ConsoleOutput()
 ) {
-    private val gameRepository = InMemoryGameRepository()
-    private val statisticsRepository = InMemoryGameStatisticsRepository()
-    private val gameHistoryRepository = InMemoryGameHistoryRepository()
-    private val moveHistoryRepository = InMemoryMoveHistoryRepository()
+    private val database = SqliteDatabase()
+    private val gameRepository = SqliteGameRepository(database = database)
+    private val statisticsRepository = SqlitePlayerStatisticsRepository(database)
+    private val gameHistoryRepository = SqliteGameHistoryRepository(database)
+    private val moveHistoryRepository = SqliteMoveHistoryRepository(database)
 
     private val menu = GameMenu(
         input,
