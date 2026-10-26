@@ -20,7 +20,7 @@ class CardService {
             is DeductionCard -> CardResult(card)
             is SpecificMovementCard -> {
                 if (card.destination == 30) {
-                    player.position = 30
+                    player.position = 10
                     player.inJail = true
                     player.jailTurns = 0
                     CardResult(card, movedToJail = true)

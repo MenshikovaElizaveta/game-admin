@@ -28,7 +28,7 @@ class CardServiceTest {
 
         val result = service.draw(player, deck)
 
-        assertEquals(30, player.position)
+        assertEquals(10, player.position)
         assertEquals(true, player.inJail)
         assertEquals(false, result.passedStart)
     }
