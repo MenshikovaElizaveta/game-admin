@@ -10,7 +10,7 @@ class SqliteGameRepository(
     private val database: SqliteDatabase = SqliteDatabase()
 ) : GameRepository {
 
-    override fun nextId(): String =
+    override fun nextId(): Int =
         database.connection().use { connection ->
             connection.autoCommit = false
 
@@ -50,7 +50,7 @@ class SqliteGameRepository(
                 }
 
                 connection.commit()
-                next.toString()
+                next
             } catch (exception: Exception) {
                 connection.rollback()
                 throw exception
@@ -72,19 +72,19 @@ class SqliteGameRepository(
                 DO UPDATE SET payload = excluded.payload
                 """.trimIndent()
             ).use { statement ->
-                statement.setString(1, game.id)
+                statement.setInt(1, game.id)
                 statement.setBytes(2, snapshot)
                 statement.executeUpdate()
             }
         }
     }
 
-    override fun findById(id: String): GameSession? {
+    override fun findById(id: Int): GameSession? {
         val bytes = database.connection().use { connection ->
             connection.prepareStatement(
                 "SELECT payload FROM games WHERE id = ?"
             ).use { statement ->
-                statement.setString(1, id)
+                statement.setInt(1, id)
 
                 statement.executeQuery().use { result ->
                     if (result.next()) result.getBytes(1) else null
@@ -104,10 +104,10 @@ class SqliteGameRepository(
                 statement.executeQuery(
                     "SELECT id FROM games ORDER BY CAST(id AS INTEGER)"
                 ).use { result ->
-                    val values = mutableListOf<String>()
+                    val values = mutableListOf<Int>()
 
                     while (result.next()) {
-                        values += result.getString(1)
+                        values += result.getInt(1)
                     }
 
                     values
@@ -118,12 +118,12 @@ class SqliteGameRepository(
         return ids.mapNotNull { id -> findById(id) }
     }
 
-    override fun delete(id: String) {
+    override fun delete(id: Int) {
         database.connection().use { connection ->
             connection.prepareStatement(
                 "DELETE FROM games WHERE id = ?"
             ).use { statement ->
-                statement.setString(1, id)
+                statement.setInt(1, id)
                 statement.executeUpdate()
             }
         }

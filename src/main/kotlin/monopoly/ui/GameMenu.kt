@@ -633,8 +633,13 @@ class GameMenu(
             output.println("${game.id} — ${game.players.joinToString(", ") { it.name }}")
         }
         output.println("Введите номер игры или 0 для возврата:")
-        val id = input.readLine().trim()
-        if (id == "0") return
+        val id = input.readLine().trim().toIntOrNull()
+        if (id == null) {
+            output.println("Некорректный номер игры.")
+            return
+        }
+        if (id == 0) return
+
         val game = gameRepository.findById(id)
         if (game == null) {
             output.println("Игра не найдена.")
@@ -669,7 +674,13 @@ class GameMenu(
 
     private fun showMoveHistory() {
         output.println("Введите номер игры:")
-        val id = input.readLine().trim()
+        val id = input.readLine().trim().toIntOrNull()
+
+        if (id == null) {
+            output.println("Некорректный номер игры.")
+            return
+        }
+
         val history: MoveHistory? = moveHistoryRepository.findByGameId(id)
         if (history == null) {
             output.println("История ходов не найдена.")

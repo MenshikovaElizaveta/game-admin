@@ -21,7 +21,7 @@ class SqliteMoveHistoryRepository(
                     DO UPDATE SET move_count = excluded.move_count
                     """.trimIndent()
                 ).use { statement ->
-                    statement.setString(1, history.gameId)
+                    statement.setInt(1, history.gameId)
                     statement.setInt(2, history.moveCount)
                     statement.executeUpdate()
                 }
@@ -29,7 +29,7 @@ class SqliteMoveHistoryRepository(
                 connection.prepareStatement(
                     "DELETE FROM moves WHERE game_id = ?"
                 ).use { statement ->
-                    statement.setString(1, history.gameId)
+                    statement.setInt(1, history.gameId)
                     statement.executeUpdate()
                 }
 
@@ -45,7 +45,7 @@ class SqliteMoveHistoryRepository(
                     """.trimIndent()
                 ).use { statement ->
                     history.moves.forEach { move ->
-                        statement.setString(1, history.gameId)
+                        statement.setInt(1, history.gameId)
                         statement.setInt(2, move.number)
                         statement.setString(3, move.playerName)
                         statement.setString(
@@ -66,12 +66,12 @@ class SqliteMoveHistoryRepository(
         }
     }
 
-    override fun findByGameId(gameId: String): MoveHistory? =
+    override fun findByGameId(gameId: Int): MoveHistory? =
         database.connection().use { connection ->
             val exists = connection.prepareStatement(
                 "SELECT 1 FROM move_history WHERE game_id = ?"
             ).use { statement ->
-                statement.setString(1, gameId)
+                statement.setInt(1, gameId)
 
                 statement.executeQuery().use { result ->
                     result.next()
@@ -92,7 +92,7 @@ class SqliteMoveHistoryRepository(
                 ORDER BY number
                 """.trimIndent()
             ).use { statement ->
-                statement.setString(1, gameId)
+                statement.setInt(1, gameId)
 
                 statement.executeQuery().use { result ->
                     while (result.next()) {

@@ -1,7 +1,7 @@
 package monopoly.domain.model.card
 
 object CardFactory {
-    fun createChanceDeck(): Deck = CardDeck(
+    fun createChanceDeck(): Deck = Deck(
         listOf(
             SpecificMovementCard(1, "Отправляйтесь на Старт", 0),
             SpecificMovementCard(2, "Отправляйтесь на Бесплатную стоянку", 20),
@@ -16,7 +16,7 @@ object CardFactory {
         ),
     )
 
-    fun createCommunityChestDeck(): Deck = CardDeck(
+    fun createCommunityChestDeck(): Deck = Deck(
         listOf(
             SpecificMovementCard(1, "Отправляйтесь на Старт", 0),
             SpecificMovementCard(2, "Отправляйтесь в тюрьму", 30, passesStartReward = false),

@@ -4,7 +4,7 @@ import monopoly.domain.model.card.Deck
 import monopoly.domain.model.cell.Board
 
 class GameSession(
-    val id: String,
+    val id: Int,
     val players: List<Player>,
     val board: Board,
     val chanceDeck: Deck,

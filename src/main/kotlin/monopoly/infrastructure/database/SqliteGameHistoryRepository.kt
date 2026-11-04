@@ -25,7 +25,7 @@ class SqliteGameHistoryRepository(
                     winner_name = excluded.winner_name
                 """.trimIndent()
             ).use { statement ->
-                statement.setString(1, summary.gameId)
+                statement.setInt(1, summary.gameId)
                 statement.setString(2, summary.playerNames.joinToString("\u001f"))
                 statement.setInt(3, summary.moveCount)
                 statement.setString(4, summary.winnerName)
@@ -48,7 +48,7 @@ class SqliteGameHistoryRepository(
 
                     while (result.next()) {
                         summaries += GameSummary(
-                            result.getString("game_id"),
+                            result.getInt("game_id"),
                             result.getString("player_names")
                                 .split("\u001f")
                                 .filter(String::isNotBlank),
@@ -62,6 +62,6 @@ class SqliteGameHistoryRepository(
             }
         }
 
-    override fun findById(gameId: String): GameSummary? =
+    override fun findById(gameId: Int): GameSummary? =
         findAll().firstOrNull { summary -> summary.gameId == gameId }
 }

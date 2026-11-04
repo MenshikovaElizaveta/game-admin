@@ -4,8 +4,8 @@ import monopoly.domain.model.GameSession
 
 interface GameRepository {
     fun save(game: GameSession)
-    fun nextId(): String
-    fun findById(id: String): GameSession?
+    fun nextId(): Int
+    fun findById(id: Int): GameSession?
     fun findAll(): List<GameSession>
-    fun delete(id: String)
+    fun delete(id: Int)
 }

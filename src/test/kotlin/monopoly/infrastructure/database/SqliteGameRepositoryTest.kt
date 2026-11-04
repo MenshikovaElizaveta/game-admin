@@ -41,7 +41,7 @@ class SqliteGameRepositoryTest {
     @Test
     fun unfinishedGameSnapshotCanBeLoadedFromSqlite() {
         val game = GameSession(
-            "test-game",
+            1,
             listOf(
                 Player("p1", "Саша"),
                 Player("p2", "Таня")
@@ -63,7 +63,7 @@ class SqliteGameRepositoryTest {
 
         games.save(game)
 
-        val restored = games.findById("test-game")!!
+        val restored = games.findById(1)!!
 
         assertEquals(
             1234,
@@ -76,12 +76,12 @@ class SqliteGameRepositoryTest {
         )
 
         assertEquals(
-            listOf("test-game"),
+            listOf(1),
             games.findAll().map { it.id }
         )
 
-        games.delete("test-game")
+        games.delete(1)
 
-        assertNull(games.findById("test-game"))
+        assertNull(games.findById(1))
     }
 }

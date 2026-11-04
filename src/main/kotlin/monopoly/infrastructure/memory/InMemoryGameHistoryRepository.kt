@@ -7,5 +7,5 @@ class InMemoryGameHistoryRepository : GameHistoryRepository {
     private val history = mutableListOf<GameSummary>()
     override fun save(summary: GameSummary) { history += summary }
     override fun findAll(): List<GameSummary> = history.toList()
-    override fun findById(gameId: String): GameSummary? = history.firstOrNull { it.gameId == gameId }
+    override fun findById(gameId: Int): GameSummary? = history.firstOrNull { it.gameId == gameId }
 }

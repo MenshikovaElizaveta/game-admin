@@ -29,14 +29,14 @@ class SqliteGameHistoryRepositoryTest {
     fun gameHistoryAndMoveHistorySurviveRepositoryReads() {
         gameHistory.save(
             GameSummary(
-                "test-history",
+                1,
                 listOf("Саша", "Таня"),
                 1,
                 "Таня"
             )
         )
 
-        val history = MoveHistory("test-history")
+        val history = MoveHistory(1)
 
         history.add(
             Move(
@@ -53,7 +53,7 @@ class SqliteGameHistoryRepositoryTest {
 
         assertEquals(
             "Таня",
-            gameHistory.findById("test-history")!!.winnerName
+            gameHistory.findById(1)!!.winnerName
         )
 
         assertEquals(
@@ -62,7 +62,7 @@ class SqliteGameHistoryRepositoryTest {
                 "Купил улицу"
             ),
             moveHistory
-                .findByGameId("test-history")!!
+                .findByGameId(1)!!
                 .moves
                 .single()
                 .descriptions

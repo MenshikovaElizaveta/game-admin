@@ -9,64 +9,280 @@ import monopoly.domain.repository.GameRepository
 import java.io.File
 import java.util.Properties
 
-class FileGameRepository(private val directory: File = File("data/games")) : GameRepository {
+class FileGameRepository(
+    private val directory: File = File("data/games"),
+) : GameRepository {
     private val sequenceFile = File(directory, "next-game-id.txt")
 
     @Synchronized
-    override fun nextId(): String {
+    override fun nextId(): Int {
         directory.mkdirs()
-        val saved = sequenceFile.takeIf { it.exists() }?.readText()?.trim()?.toIntOrNull()
-        val minimumNext = (directory.listFiles { file -> file.extension == "properties" }
-            ?.mapNotNull { it.nameWithoutExtension.toIntOrNull() }?.maxOrNull() ?: 0) + 1
+
+        val saved = sequenceFile
+            .takeIf { it.exists() }
+            ?.readText()
+            ?.trim()
+            ?.toIntOrNull()
+
+        val minimumNext = (
+                directory.listFiles { file ->
+                    file.extension == "properties"
+                }?.mapNotNull {
+                    it.nameWithoutExtension.toIntOrNull()
+                }?.maxOrNull() ?: 0
+                ) + 1
+
         val next = maxOf(saved ?: 1, minimumNext)
+
         sequenceFile.parentFile?.mkdirs()
         sequenceFile.writeText((next + 1).toString())
-        return next.toString()
+
+        return next
     }
+
     override fun save(game: GameSession) {
-        directory.mkdirs(); val p = Properties()
-        p.setProperty("id", game.id); p.setProperty("active", game.active.toString()); p.setProperty("current", game.players.indexOf(game.currentPlayer).toString()); p.setProperty("turnInProgress", game.turnInProgress.toString())
-        p.setProperty("players.count", game.players.size.toString())
+        directory.mkdirs()
+        val properties = Properties()
+
+        properties.setProperty("id", game.id.toString())
+        properties.setProperty("active", game.active.toString())
+        properties.setProperty(
+            "current",
+            game.players.indexOf(game.currentPlayer).toString(),
+        )
+        properties.setProperty(
+            "turnInProgress",
+            game.turnInProgress.toString(),
+        )
+        properties.setProperty("players.count", game.players.size.toString())
+
         game.players.forEachIndexed { i, player ->
-            val k = "player.$i."; p.setProperty(k+"id", player.id); p.setProperty(k+"name", player.name); p.setProperty(k+"balance", player.balance.toString()); p.setProperty(k+"position", player.position.toString()); p.setProperty(k+"jail", player.inJail.toString()); p.setProperty(k+"jailTurns", player.jailTurns.toString()); p.setProperty(k+"freeParking", player.atFreeParking.toString()); p.setProperty(k+"bankrupt", player.bankrupt.toString())
+            val key = "player.$i."
+
+            properties.setProperty(key + "id", player.id)
+            properties.setProperty(key + "name", player.name)
+            properties.setProperty(key + "balance", player.balance.toString())
+            properties.setProperty(key + "position", player.position.toString())
+            properties.setProperty(key + "jail", player.inJail.toString())
+            properties.setProperty(
+                key + "jailTurns",
+                player.jailTurns.toString(),
+            )
+            properties.setProperty(
+                key + "freeParking",
+                player.atFreeParking.toString(),
+            )
+            properties.setProperty(key + "bankrupt", player.bankrupt.toString())
         }
-        game.board.cells.forEach { cell -> cell.property?.let { prop ->
-            val k = "property.${cell.number}."; p.setProperty(k+"owner", game.players.indexOfFirst { it === prop.owner }.toString()); p.setProperty(k+"mortgaged", prop.mortgaged.toString()); if (prop is Street) p.setProperty(k+"houses", prop.houses.toString())
-        } }
-        saveDeck(p, "chance", game.chanceDeck); saveDeck(p, "chest", game.communityChestDeck)
-        p.setProperty("moves.count", game.moveHistory.moves.size.toString())
-        game.moveHistory.moves.forEachIndexed { i, move -> p.setProperty("move.$i.number", move.number.toString()); p.setProperty("move.$i.player", move.playerName); p.setProperty("move.$i.descriptions", move.descriptions.joinToString("\n")) }
-        File(directory, "${game.id}.properties").outputStream().use { p.store(it, "Сохранённая партия") }
-    }
-    private fun saveDeck(p: Properties, key: String, deck: Deck) { p.setProperty("$key.order", deck.cards.joinToString(",") { it.number.toString() }); p.setProperty("$key.index", deck.currentIndex.toString()) }
-    override fun findById(id: String): GameSession? {
-        val file = File(directory, "$id.properties"); if (!file.exists()) return null
-        val p = Properties(); file.inputStream().use(p::load)
-        val players = (0 until p.getProperty("players.count", "0").toInt()).map { i ->
-            val k = "player.$i."; Player(p.getProperty(k+"id"), p.getProperty(k+"name")).also { player ->
-                player.balance=p.getProperty(k+"balance").toInt(); player.position=p.getProperty(k+"position").toInt(); player.inJail=p.getProperty(k+"jail", "false").toBoolean(); player.jailTurns=p.getProperty(k+"jailTurns", "0").toInt(); player.atFreeParking=p.getProperty(k+"freeParking", "false").toBoolean(); player.bankrupt=p.getProperty(k+"bankrupt", "false").toBoolean()
+
+        game.board.cells.forEach { cell ->
+            cell.property?.let { property ->
+                val key = "property.${cell.number}."
+                val ownerIndex = game.players.indexOfFirst {
+                    it === property.owner
+                }
+
+                properties.setProperty(key + "owner", ownerIndex.toString())
+                properties.setProperty(
+                    key + "mortgaged",
+                    property.mortgaged.toString(),
+                )
+
+                if (property is Street) {
+                    properties.setProperty(
+                        key + "houses",
+                        property.houses.toString(),
+                    )
+                }
             }
         }
-        val board = CellFactory.createBoard(); val game = GameSession(id, players, board, CardFactory.createChanceDeck(), CardFactory.createCommunityChestDeck())
-        board.cells.forEach { cell -> cell.property?.let { prop ->
-            val k="property.${cell.number}."; val owner=p.getProperty(k+"owner", "-1").toInt(); if(owner in players.indices) players[owner].addProperty(prop)
-            prop.mortgaged=p.getProperty(k+"mortgaged", "false").toBoolean(); if(prop is Street) repeat(p.getProperty(k+"houses", "0").toInt().coerceIn(0,5)) { prop.buildHouse() }
-        } }
-        restoreDeck(p, "chance", game.chanceDeck); restoreDeck(p, "chest", game.communityChestDeck)
-        repeat(p.getProperty("moves.count", "0").toInt()) { i -> game.moveHistory.add(Move(p.getProperty("move.$i.number").toInt(), p.getProperty("move.$i.player"), p.getProperty("move.$i.descriptions", "").split("\n").filter { it.isNotBlank() })) }
-        val current = p.getProperty("current", "0").toInt().coerceIn(players.indices)
+
+        saveDeck(properties, "chance", game.chanceDeck)
+        saveDeck(properties, "chest", game.communityChestDeck)
+
+        properties.setProperty(
+            "moves.count",
+            game.moveHistory.moves.size.toString(),
+        )
+
+        game.moveHistory.moves.forEachIndexed { i, move ->
+            properties.setProperty(
+                "move.$i.number",
+                move.number.toString(),
+            )
+            properties.setProperty("move.$i.player", move.playerName)
+            properties.setProperty(
+                "move.$i.descriptions",
+                move.descriptions.joinToString("\n"),
+            )
+        }
+
+        File(directory, "${game.id}.properties").outputStream().use {
+            properties.store(it, "Сохранённая партия")
+        }
+    }
+
+    private fun saveDeck(
+        properties: Properties,
+        key: String,
+        deck: Deck,
+    ) {
+        properties.setProperty(
+            "$key.order",
+            deck.cards.joinToString(",") { it.number.toString() },
+        )
+        properties.setProperty(
+            "$key.index",
+            deck.currentIndex.toString(),
+        )
+    }
+
+    override fun findById(id: Int): GameSession? {
+        val file = File(directory, "$id.properties")
+        if (!file.exists()) return null
+
+        val properties = Properties()
+        file.inputStream().use(properties::load)
+
+        val players = (0 until
+                properties.getProperty("players.count", "0").toInt()
+                ).map { i ->
+                val key = "player.$i."
+
+                Player(
+                    properties.getProperty(key + "id"),
+                    properties.getProperty(key + "name"),
+                ).also { player ->
+                    player.balance = properties
+                        .getProperty(key + "balance")
+                        .toInt()
+                    player.position = properties
+                        .getProperty(key + "position")
+                        .toInt()
+                    player.inJail = properties
+                        .getProperty(key + "jail", "false")
+                        .toBoolean()
+                    player.jailTurns = properties
+                        .getProperty(key + "jailTurns", "0")
+                        .toInt()
+                    player.atFreeParking = properties
+                        .getProperty(key + "freeParking", "false")
+                        .toBoolean()
+                    player.bankrupt = properties
+                        .getProperty(key + "bankrupt", "false")
+                        .toBoolean()
+                }
+            }
+
+        val board = CellFactory.createBoard()
+        val game = GameSession(
+            id,
+            players,
+            board,
+            CardFactory.createChanceDeck(),
+            CardFactory.createCommunityChestDeck(),
+        )
+
+        board.cells.forEach { cell ->
+            cell.property?.let { property ->
+                val key = "property.${cell.number}."
+                val ownerIndex = properties
+                    .getProperty(key + "owner", "-1")
+                    .toInt()
+
+                if (ownerIndex in players.indices) {
+                    players[ownerIndex].addProperty(property)
+                }
+
+                property.mortgaged = properties
+                    .getProperty(key + "mortgaged", "false")
+                    .toBoolean()
+
+                if (property is Street) {
+                    val houses = properties
+                        .getProperty(key + "houses", "0")
+                        .toInt()
+                        .coerceIn(0, 5)
+
+                    repeat(houses) {
+                        property.buildHouse()
+                    }
+                }
+            }
+        }
+
+        restoreDeck(properties, "chance", game.chanceDeck)
+        restoreDeck(properties, "chest", game.communityChestDeck)
+
+        repeat(properties.getProperty("moves.count", "0").toInt()) { i ->
+            val descriptions = properties
+                .getProperty("move.$i.descriptions", "")
+                .split("\n")
+                .filter { it.isNotBlank() }
+
+            game.moveHistory.add(
+                Move(
+                    properties.getProperty("move.$i.number").toInt(),
+                    properties.getProperty("move.$i.player"),
+                    descriptions,
+                ),
+            )
+        }
+
+        val current = properties
+            .getProperty("current", "0")
+            .toInt()
+            .coerceIn(players.indices)
+
         game.restoreCurrentPlayer(current)
-        game.turnInProgress = p.getProperty("turnInProgress", "false").toBoolean()
-        if (!p.getProperty("active", "true").toBoolean()) game.finish()
+        game.turnInProgress = properties
+            .getProperty("turnInProgress", "false")
+            .toBoolean()
+
+        if (!properties.getProperty("active", "true").toBoolean()) {
+            game.finish()
+        }
+
         return game
     }
-    private fun restoreDeck(p: Properties, key: String, deck: Deck) {
-        val order = p.getProperty("$key.order")?.split(",")?.mapNotNull(String::toIntOrNull)
-        if (order?.size == 10) deck.reorder(order)
-        repeat(p.getProperty("$key.index", "0").toInt().coerceIn(0,9)) { deck.draw() }
+
+    private fun restoreDeck(
+        properties: Properties,
+        key: String,
+        deck: Deck,
+    ) {
+        val order = properties
+            .getProperty("$key.order")
+            ?.split(",")
+            ?.mapNotNull(String::toIntOrNull)
+
+        if (order?.size == 10) {
+            deck.reorder(order)
+        }
+
+        val index = properties
+            .getProperty("$key.index", "0")
+            .toInt()
+            .coerceIn(0, 9)
+
+        repeat(index) {
+            deck.draw()
+        }
     }
-    override fun findAll(): List<GameSession> = if (!directory.exists()) emptyList() else
-        directory.listFiles { f -> f.extension == "properties" }?.mapNotNull { findById(it.nameWithoutExtension) }
-            ?.sortedBy { it.id.toIntOrNull() ?: Int.MAX_VALUE } ?: emptyList()
-    override fun delete(id: String) { File(directory, "$id.properties").delete() }
+
+    override fun findAll(): List<GameSession> {
+        if (!directory.exists()) return emptyList()
+
+        return directory
+            .listFiles { file -> file.extension == "properties" }
+            ?.mapNotNull { file ->
+                file.nameWithoutExtension.toIntOrNull()?.let(::findById)
+            }
+            ?.sortedBy { it.id }
+            ?: emptyList()
+    }
+
+    override fun delete(id: Int) {
+        File(directory, "$id.properties").delete()
+    }
 }

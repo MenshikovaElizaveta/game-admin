@@ -192,7 +192,7 @@ class MainWindow : JFrame("Monopoly") {
         }
         val labels = available.map { "${it.id} — ${it.players.joinToString(", ") { p -> p.name }}" }.toTypedArray()
         val selected = JOptionPane.showInputDialog(this, "Выберите игру", "Продолжить игру", JOptionPane.QUESTION_MESSAGE, null, labels, labels.first()) as? String ?: return
-        val id = selected.substringBefore(" — ")
+        val id = selected.substringBefore(" — ").toIntOrNull() ?: return
         game = games.findById(id)
         if (game == null) message("Не удалось восстановить игру.") else {
             gameFinished = false
@@ -629,13 +629,23 @@ class MainWindow : JFrame("Monopoly") {
 
     private fun chooseMoveHistory() {
         val allIds = (history.findAll().map { it.gameId } + games.findAll().map { it.id }).distinct()
+
         val id = if (allIds.isNotEmpty()) {
-            JOptionPane.showInputDialog(this, "Выберите номер игры", "История ходов", JOptionPane.QUESTION_MESSAGE, null, allIds.toTypedArray(), allIds.first()) as? String
-        } else JOptionPane.showInputDialog(this, "Введите номер игры")
-        if (!id.isNullOrBlank()) showMoveHistory(id)
+            JOptionPane.showInputDialog(
+                this, "Выберите номер игры", "История ходов",
+                JOptionPane.QUESTION_MESSAGE, null,
+                allIds.map { it.toString() }.toTypedArray(),
+                allIds.first().toString()
+            ) as? String
+        } else {
+            JOptionPane.showInputDialog(this, "Введите номер игры")
+        }
+
+        val gameId = id?.toIntOrNull()
+        if (gameId != null) showMoveHistory(gameId)
     }
 
-    private fun showMoveHistory(id: String) {
+    private fun showMoveHistory(id: Int) {
         val h = moveHistory.findByGameId(id) ?: game?.takeIf { it.id == id }?.moveHistory
         if (h == null || h.moves.isEmpty()) { message("История ходов не найдена."); return }
         var index = 0

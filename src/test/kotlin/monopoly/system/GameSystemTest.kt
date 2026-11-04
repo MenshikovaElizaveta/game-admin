@@ -6,6 +6,7 @@ import monopoly.domain.model.GameSession
 import monopoly.domain.model.Move
 import monopoly.domain.model.Player
 import monopoly.domain.model.PlayerStatistics
+import monopoly.domain.model.GameSummary
 import monopoly.domain.model.card.CardFactory
 import monopoly.domain.model.cell.CellFactory
 import monopoly.domain.service.MovementService
@@ -13,7 +14,6 @@ import monopoly.infrastructure.memory.InMemoryGameHistoryRepository
 import monopoly.infrastructure.memory.InMemoryGameRepository
 import monopoly.infrastructure.memory.InMemoryGameStatisticsRepository
 import monopoly.infrastructure.memory.InMemoryMoveHistoryRepository
-import monopoly.domain.model.GameSummary
 
 class GameSystemTest {
     @Test
@@ -31,7 +31,9 @@ class GameSystemTest {
         val restored = repository.findById(game.id)!!
         restored.currentPlayer
         MovementService.move(restored.currentPlayer, 2)
-        restored.moveHistory.add(Move(2, restored.currentPlayer.name, listOf("Продолжение игры")))
+        restored.moveHistory.add(
+            Move(2, restored.currentPlayer.name, listOf("Продолжение игры"))
+        )
         moves.save(restored.moveHistory)
 
         assertEquals(2, moves.findByGameId(game.id)!!.moveCount)
@@ -54,7 +56,14 @@ class GameSystemTest {
 
         statisticsRepository.save(PlayerStatistics(sasha.id, sasha.name, 1, 0))
         statisticsRepository.save(PlayerStatistics(tanya.id, tanya.name, 1, 1))
-        gameHistoryRepository.save(GameSummary(game.id, game.players.map { it.name }, game.moveHistory.moveCount, winner.name))
+        gameHistoryRepository.save(
+            GameSummary(
+                game.id,
+                game.players.map { it.name },
+                game.moveHistory.moveCount,
+                winner.name
+            )
+        )
         moveHistoryRepository.save(game.moveHistory)
         gameRepository.save(game)
         gameRepository.delete(game.id)
@@ -65,8 +74,11 @@ class GameSystemTest {
         assertEquals(null, gameRepository.findById(game.id))
     }
 
-    private fun newGame(first: Player, second: Player = Player("id-tanya", "Таня")): GameSession = GameSession(
-        "game-1",
+    private fun newGame(
+        first: Player,
+        second: Player = Player("id-tanya", "Таня")
+    ): GameSession = GameSession(
+        1,
         listOf(first, second),
         CellFactory.createBoard(),
         CardFactory.createChanceDeck(),

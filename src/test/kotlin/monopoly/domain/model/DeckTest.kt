@@ -8,7 +8,7 @@ import monopoly.domain.model.card.IncomeCard
 import monopoly.domain.model.card.NearestMovementCard
 import monopoly.domain.model.card.SpecificMovementCard
 
-class CardDeckTest {
+class DeckTest {
     @Test
     fun chanceDeckContainsRequiredTenCards() {
         val deck = CardFactory.createChanceDeck()

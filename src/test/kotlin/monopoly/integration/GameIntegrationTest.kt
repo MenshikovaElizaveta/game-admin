@@ -4,14 +4,11 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import monopoly.domain.model.GameSession
 import monopoly.domain.model.Player
-import monopoly.domain.model.PlayerStatistics
 import monopoly.domain.model.card.CardFactory
 import monopoly.domain.model.cell.CellFactory
 import monopoly.domain.model.property.Railroad
-import monopoly.domain.repository.PlayerStatisticsRepository
 import monopoly.domain.service.PropertyService
 import monopoly.infrastructure.memory.InMemoryGameRepository
-import monopoly.infrastructure.memory.InMemoryMoveHistoryRepository
 
 class GameIntegrationTest {
     @Test
@@ -51,7 +48,7 @@ class GameIntegrationTest {
     }
 
     private fun newGame(first: Player): GameSession = GameSession(
-        "game-1",
+        1,
         listOf(first, Player("2", "Таня")),
         CellFactory.createBoard(),
         CardFactory.createChanceDeck(),
