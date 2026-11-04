@@ -105,8 +105,7 @@ class MainWindow : JFrame("Monopoly") {
                     message("Имена игроков в одной партии должны различаться.")
                     continue
                 }
-                val id = statistics.findByName(name)?.playerId ?: java.util.UUID.randomUUID().toString()
-                players += Player(id, name)
+                players += Player(name)
                 break
             }
         }
@@ -583,9 +582,9 @@ class MainWindow : JFrame("Monopoly") {
                 g.finish()
                 history.save(GameSummary(g.id, g.players.map { it.name }, g.moveHistory.moveCount, winner.name))
                 g.players.forEach { player ->
-                    val stat = statistics.findByPlayerId(player.id) ?: PlayerStatistics(player.id, player.name)
+                    val stat = statistics.findByName(player.name) ?: PlayerStatistics(player.name)
                     stat.gamesPlayed++
-                    if (player.id == winner.id) stat.wins++
+                    if (player.name.equals(winner.name, ignoreCase = true)) stat.wins++
                     statistics.save(stat)
                 }
                 moveHistory.save(g.moveHistory)

@@ -15,35 +15,10 @@ class SqlitePlayerStatisticsRepository(
             if (existing == null) {
                 insert(connection, statistics)
             } else {
-                update(connection, existing.playerId, statistics)
+                update(connection, statistics)
             }
         }
     }
-
-    override fun findByPlayerId(playerId: String): PlayerStatistics? =
-        database.connection().use { connection ->
-            connection.prepareStatement(
-                """
-                SELECT player_id, player_name, games_played
-                FROM player_statistics
-                WHERE player_id = ?
-                """.trimIndent()
-            ).use { statement ->
-                statement.setString(1, playerId)
-
-                statement.executeQuery().use { result ->
-                    if (result.next()) {
-                        PlayerStatistics(
-                            playerId = result.getString("player_id"),
-                            playerName = result.getString("player_name"),
-                            gamesPlayed = result.getInt("games_played")
-                        )
-                    } else {
-                        null
-                    }
-                }
-            }
-        }
 
     override fun findByName(name: String): PlayerStatistics? =
         database.connection().use { connection ->
@@ -54,9 +29,9 @@ class SqlitePlayerStatisticsRepository(
         database.connection().use { connection ->
             connection.prepareStatement(
                 """
-                SELECT player_id, player_name, games_played
+                SELECT player_name, games_played, games_won
                 FROM player_statistics
-                ORDER BY player_name COLLATE BINARY
+                ORDER BY player_name
                 """.trimIndent()
             ).use { statement ->
                 statement.executeQuery().use { result ->
@@ -64,9 +39,9 @@ class SqlitePlayerStatisticsRepository(
 
                     while (result.next()) {
                         statistics += PlayerStatistics(
-                            playerId = result.getString("player_id"),
                             playerName = result.getString("player_name"),
-                            gamesPlayed = result.getInt("games_played")
+                            gamesPlayed = result.getInt("games_played"),
+                            wins = result.getInt("games_won")
                         )
                     }
 
@@ -81,9 +56,9 @@ class SqlitePlayerStatisticsRepository(
     ): PlayerStatistics? =
         connection.prepareStatement(
             """
-            SELECT player_id, player_name, games_played
+            SELECT player_name, games_played, games_won
             FROM player_statistics
-            WHERE player_name = ? COLLATE BINARY
+            WHERE player_name = ?
             """.trimIndent()
         ).use { statement ->
             statement.setString(1, name)
@@ -91,9 +66,9 @@ class SqlitePlayerStatisticsRepository(
             statement.executeQuery().use { result ->
                 if (result.next()) {
                     PlayerStatistics(
-                        playerId = result.getString("player_id"),
                         playerName = result.getString("player_name"),
-                        gamesPlayed = result.getInt("games_played")
+                        gamesPlayed = result.getInt("games_played"),
+                        wins = result.getInt("games_won")
                     )
                 } else {
                     null
@@ -108,34 +83,35 @@ class SqlitePlayerStatisticsRepository(
         connection.prepareStatement(
             """
             INSERT INTO player_statistics(
-                player_id,
                 player_name,
-                games_played
+                games_played,
+                games_won
             )
             VALUES(?, ?, ?)
             """.trimIndent()
         ).use { statement ->
-            statement.setString(1, statistics.playerId)
-            statement.setString(2, statistics.playerName)
-            statement.setInt(3, statistics.gamesPlayed)
+            statement.setString(1, statistics.playerName)
+            statement.setInt(2, statistics.gamesPlayed)
+            statement.setInt(3, statistics.wins)
             statement.executeUpdate()
         }
     }
 
     private fun update(
         connection: Connection,
-        playerId: String,
         statistics: PlayerStatistics
     ) {
         connection.prepareStatement(
             """
             UPDATE player_statistics
-            SET games_played = ?
-            WHERE player_id = ?
+            SET games_played = ?,
+                games_won = ?
+            WHERE player_name = ?
             """.trimIndent()
         ).use { statement ->
             statement.setInt(1, statistics.gamesPlayed)
-            statement.setString(2, playerId)
+            statement.setInt(2, statistics.wins)
+            statement.setString(3, statistics.playerName)
             statement.executeUpdate()
         }
     }

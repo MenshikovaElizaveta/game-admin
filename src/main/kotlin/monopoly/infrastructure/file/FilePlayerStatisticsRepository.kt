@@ -26,50 +26,35 @@ class FilePlayerStatisticsRepository(
 
     override fun save(statistics: PlayerStatistics) {
         val properties = load()
-        val id = statistics.playerId
+        val key = statistics.playerName.lowercase()
 
-        properties.setProperty("$id.name", statistics.playerName)
-        properties.setProperty(
-            "$id.games",
-            statistics.gamesPlayed.toString(),
-        )
-        properties.setProperty(
-            "$id.wins",
-            statistics.wins.toString(),
-        )
+        properties.setProperty("$key.name", statistics.playerName)
+        properties.setProperty("$key.games", statistics.gamesPlayed.toString(),)
+        properties.setProperty("$key.wins", statistics.wins.toString(),)
 
         store(properties)
     }
 
-    override fun findByPlayerId(
-        playerId: String,
-    ): PlayerStatistics? {
-        return load().let { properties ->
-            val name = properties.getProperty("$playerId.name")
-                ?: return null
-
-            PlayerStatistics(
-                playerId,
-                name,
-                properties.getProperty("$playerId.games", "0").toInt(),
-                properties.getProperty("$playerId.wins", "0").toInt(),
-            )
-        }
-    }
-
     override fun findByName(name: String): PlayerStatistics? {
-        return findAll().firstOrNull {
-            it.playerName.equals(name, ignoreCase = true)
-        }
+        val properties = load()
+        val key = name.lowercase()
+
+        val playerName = properties.getProperty("$key.name") ?: return null
+
+        return PlayerStatistics(
+            playerName,
+            properties.getProperty("$key.games", "0").toInt(),
+            properties.getProperty("$key.wins", "0").toInt()
+        )
     }
 
     override fun findAll(): List<PlayerStatistics> {
-        return load()
-            .stringPropertyNames()
+        val properties = load()
+
+        return properties.stringPropertyNames()
             .filter { it.endsWith(".name") }
             .mapNotNull { key ->
-                val id = key.removeSuffix(".name")
-                findByPlayerId(id)
+                findByName(key.removeSuffix(".name"))
             }
             .sortedBy { it.playerName.lowercase() }
     }

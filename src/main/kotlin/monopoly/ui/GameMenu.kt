@@ -82,9 +82,7 @@ class GameMenu(
                     continue
                 }
 
-                val statistics = statisticsRepository.findByName(name)
-                val playerId = statistics?.playerId ?: UUID.randomUUID().toString()
-                players += Player(playerId, name)
+                players += Player(name)
                 break
             }
         }
@@ -604,10 +602,10 @@ class GameMenu(
         val winner = game.winner() ?: return
         output.println("Победил игрок ${winner.name}")
         game.players.forEach { player ->
-            val statistics = statisticsRepository.findByPlayerId(player.id)
-                ?: PlayerStatistics(player.id, player.name)
+            val statistics = statisticsRepository.findByName(player.name)
+                ?: PlayerStatistics(player.name)
             statistics.gamesPlayed++
-            if (player.id == winner.id) statistics.wins++
+            if (player.name.equals(winner.name, ignoreCase = true)) statistics.wins++
             statisticsRepository.save(statistics)
         }
         gameHistoryRepository.save(

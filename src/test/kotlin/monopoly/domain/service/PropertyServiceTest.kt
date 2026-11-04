@@ -12,7 +12,7 @@ class PropertyServiceTest {
 
     @Test
     fun buyingStreetChangesBalanceAndOwner() {
-        val player = Player("1", "Саша")
+        val player = Player("Саша")
         val property = street(1)
 
         PropertyService.buy(player, property)
@@ -23,7 +23,7 @@ class PropertyServiceTest {
 
     @Test
     fun mortgageGivesHalfOfPrice() {
-        val player = Player("1", "Саша")
+        val player = Player("Саша")
         val property = street(1)
         player.addProperty(property)
 
@@ -35,7 +35,7 @@ class PropertyServiceTest {
 
     @Test
     fun unmortgageCostsOneHundredTenPercent() {
-        val player = Player("1", "Саша")
+        val player = Player("Саша")
         val property = street(1)
         player.addProperty(property)
         PropertyService.mortgage(player, property)

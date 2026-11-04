@@ -6,7 +6,6 @@ import monopoly.domain.model.property.Street
 import monopoly.domain.model.property.Utility
 
 class Player(
-    val id: String,
     val name: String,
 ) {
     var balance: Int = 1500

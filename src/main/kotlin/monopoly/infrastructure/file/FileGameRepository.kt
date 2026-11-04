@@ -59,7 +59,6 @@ class FileGameRepository(
         game.players.forEachIndexed { i, player ->
             val key = "player.$i."
 
-            properties.setProperty(key + "id", player.id)
             properties.setProperty(key + "name", player.name)
             properties.setProperty(key + "balance", player.balance.toString())
             properties.setProperty(key + "position", player.position.toString())
@@ -150,7 +149,6 @@ class FileGameRepository(
                 val key = "player.$i."
 
                 Player(
-                    properties.getProperty(key + "id"),
                     properties.getProperty(key + "name"),
                 ).also { player ->
                     player.balance = properties

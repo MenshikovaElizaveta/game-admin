@@ -43,8 +43,8 @@ class SqliteGameRepositoryTest {
         val game = GameSession(
             1,
             listOf(
-                Player("p1", "Саша"),
-                Player("p2", "Таня")
+                Player("Саша"),
+                Player("Таня")
             ),
             CellFactory.createBoard(),
             CardFactory.createChanceDeck(),

@@ -32,8 +32,7 @@ class SqliteDatabase(
             statement.executeUpdate(
                 """
                 CREATE TABLE IF NOT EXISTS player_statistics (
-                    player_id TEXT PRIMARY KEY,
-                    player_name TEXT NOT NULL COLLATE BINARY UNIQUE,
+                    player_name TEXT PRIMARY KEY,
                     games_played INTEGER NOT NULL DEFAULT 0,
                     games_won INTEGER NOT NULL DEFAULT 0
                 )

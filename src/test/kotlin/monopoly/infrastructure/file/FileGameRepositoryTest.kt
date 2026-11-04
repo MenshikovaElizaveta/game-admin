@@ -17,7 +17,7 @@ class FileGameRepositoryTest {
     fun `game state survives repository recreation`() {
         val directory = Files.createTempDirectory("games-test").toFile()
         val repository = FileGameRepository(directory)
-        val players = listOf(Player("p1", "Саша"), Player("p2", "Таня"))
+        val players = listOf(Player("Саша"), Player("Таня"))
         val board = CellFactory.createBoard()
         val game = GameSession(
             1,

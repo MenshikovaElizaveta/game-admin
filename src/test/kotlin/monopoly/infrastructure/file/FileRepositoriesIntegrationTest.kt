@@ -17,8 +17,8 @@ class FileRepositoriesIntegrationTest {
         val gamesFile = directory.resolve("history.properties")
         val movesDirectory = directory.resolve("moves")
 
-        FilePlayerStatisticsRepository(statisticsFile).save(
-            PlayerStatistics("player-1", "Саша", 4, 2)
+        FilePlayerStatisticsRepository(
+            statisticsFile).save(PlayerStatistics("Саша", 4, 2)
         )
 
         FileGameHistoryRepository(gamesFile).save(
@@ -30,7 +30,7 @@ class FileRepositoriesIntegrationTest {
         FileMoveHistoryRepository(movesDirectory).save(moves)
 
         val restoredStatistics = assertNotNull(
-            FilePlayerStatisticsRepository(statisticsFile).findByPlayerId("player-1")
+            FilePlayerStatisticsRepository(statisticsFile).findByName("Саша")
         )
         assertEquals(4, restoredStatistics.gamesPlayed)
         assertEquals(2, restoredStatistics.wins)

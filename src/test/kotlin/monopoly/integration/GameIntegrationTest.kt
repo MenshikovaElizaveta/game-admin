@@ -13,7 +13,7 @@ import monopoly.infrastructure.memory.InMemoryGameRepository
 class GameIntegrationTest {
     @Test
     fun buyingPropertyConnectsPlayerAndBoardProperty() {
-        val player = Player("1", "Саша")
+        val player = Player("Саша")
         val board = CellFactory.createBoard()
         val property = board.getCell(1).property!!
 
@@ -26,7 +26,7 @@ class GameIntegrationTest {
 
     @Test
     fun railroadRentDependsOnNumberOfOwnedRailroads() {
-        val sasha = Player("1", "Саша")
+        val sasha = Player("Саша")
         val game = newGame(sasha)
         val first = game.board.getCell(5).property as Railroad
         val second = game.board.getCell(15).property as Railroad
@@ -40,7 +40,7 @@ class GameIntegrationTest {
     @Test
     fun unfinishedGameCanBeSavedAndFoundById() {
         val repository = InMemoryGameRepository()
-        val game = newGame(Player("1", "Саша"))
+        val game = newGame(Player("Саша"))
         repository.save(game)
 
         assertEquals(game, repository.findById(game.id))
@@ -49,7 +49,7 @@ class GameIntegrationTest {
 
     private fun newGame(first: Player): GameSession = GameSession(
         1,
-        listOf(first, Player("2", "Таня")),
+        listOf(first, Player("Таня")),
         CellFactory.createBoard(),
         CardFactory.createChanceDeck(),
         CardFactory.createCommunityChestDeck(),

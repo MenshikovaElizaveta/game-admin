@@ -18,15 +18,15 @@ class GameSession(
 
     val moveHistory = MoveHistory(id)
 
+    val currentPlayer: Player
+        get() = players[currentPlayerIndex]
+
     init {
         require(players.size in 2..8) { "В игре должно быть от 2 до 8 игроков." }
-        require(players.map { it.name.lowercase() }.toSet().size == players.size) {
+        require(players.map { it.name }.toSet().size == players.size) {
             "Имена игроков должны быть уникальными."
         }
     }
-
-    val currentPlayer: Player
-        get() = players[currentPlayerIndex]
 
     fun finish() {
         active = false

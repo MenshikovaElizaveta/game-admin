@@ -9,8 +9,8 @@ import monopoly.domain.model.property.Street
 class BankruptcyServiceTest {
     @Test
     fun bankruptcyToPlayerTransfersAllPropertiesAndRemovesHouses() {
-        val debtor = Player("1", "Саша")
-        val creditor = Player("2", "Таня")
+        val debtor = Player("Саша")
+        val creditor = Player("Таня")
         val first = Street(1, "Житная ул", 60, 50, listOf(2, 10, 30, 90, 160, 250), PropertyColor.BROWN)
         val second = Street(3, "Нагатинская ул", 60, 50, listOf(2, 10, 30, 90, 160, 250), PropertyColor.BROWN)
         debtor.addProperty(first)

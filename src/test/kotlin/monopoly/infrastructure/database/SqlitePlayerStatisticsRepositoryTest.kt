@@ -24,54 +24,37 @@ class SqlitePlayerStatisticsRepositoryTest {
 
         repository.save(
             PlayerStatistics(
-                playerId = "id-1",
                 playerName = "САША",
-                gamesPlayed = 2
+                gamesPlayed = 2,
+                wins = 1
             )
         )
 
         repository.save(
             PlayerStatistics(
-                playerId = "id-2",
                 playerName = "САША",
-                gamesPlayed = 3
+                gamesPlayed = 3,
+                wins = 2
             )
         )
 
         val result = repository.findByName("САША")
 
         assertNotNull(result)
-        assertEquals("id-1", result.playerId)
         assertEquals(1, repository.findAll().size)
+        assertEquals(3, result.gamesPlayed)
+        assertEquals(2, result.wins)
     }
 
     @Test
     fun differentNameCasesHaveDifferentIds() {
         val repository = createRepository()
 
-        repository.save(
-            PlayerStatistics(
-                playerId = "id-1",
-                playerName = "САША",
-                gamesPlayed = 2
-            )
-        )
+        repository.save(PlayerStatistics("Саша", 2, 1))
+        repository.save(PlayerStatistics("Таня", 3, 2))
 
-        repository.save(
-            PlayerStatistics(
-                playerId = "id-2",
-                playerName = "сАША",
-                gamesPlayed = 3
-            )
-        )
-
-        val uppercase = repository.findByName("САША")
-        val mixedCase = repository.findByName("сАША")
-
-        assertNotNull(uppercase)
-        assertNotNull(mixedCase)
-        assertEquals("id-1", uppercase.playerId)
-        assertEquals("id-2", mixedCase.playerId)
         assertEquals(2, repository.findAll().size)
+        assertNotNull(repository.findByName("Саша"))
+        assertNotNull(repository.findByName("Таня"))
     }
 }

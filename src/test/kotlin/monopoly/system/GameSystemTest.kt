@@ -20,7 +20,7 @@ class GameSystemTest {
     fun unfinishedGameScenarioCanBeSavedThenContinued() {
         val repository = InMemoryGameRepository()
         val moves = InMemoryMoveHistoryRepository()
-        val sasha = Player("id-sasha", "Саша")
+        val sasha = Player("Саша")
         val game = newGame(sasha)
 
         MovementService.move(sasha, 4)
@@ -46,16 +46,17 @@ class GameSystemTest {
         val statisticsRepository = InMemoryGameStatisticsRepository()
         val gameHistoryRepository = InMemoryGameHistoryRepository()
         val moveHistoryRepository = InMemoryMoveHistoryRepository()
-        val sasha = Player("id-sasha", "Саша")
-        val tanya = Player("id-tanya", "Таня")
+        val sasha = Player("Саша")
+        val tanya = Player("Таня")
         val game = newGame(sasha, tanya)
 
         game.moveHistory.add(Move(1, "Саша", listOf("Первый ход")))
         sasha.bankrupt = true
         val winner = game.winner()!!
 
-        statisticsRepository.save(PlayerStatistics(sasha.id, sasha.name, 1, 0))
-        statisticsRepository.save(PlayerStatistics(tanya.id, tanya.name, 1, 1))
+        statisticsRepository.save(PlayerStatistics(sasha.name, 1, 0))
+        statisticsRepository.save(PlayerStatistics(tanya.name, 1, 1))
+
         gameHistoryRepository.save(
             GameSummary(
                 game.id,
@@ -68,7 +69,7 @@ class GameSystemTest {
         gameRepository.save(game)
         gameRepository.delete(game.id)
 
-        assertEquals(1, statisticsRepository.findByPlayerId(tanya.id)!!.wins)
+        assertEquals(1, statisticsRepository.findByName(tanya.name)!!.wins)
         assertEquals(tanya.name, gameHistoryRepository.findById(game.id)!!.winnerName)
         assertEquals(1, moveHistoryRepository.findByGameId(game.id)!!.moveCount)
         assertEquals(null, gameRepository.findById(game.id))
@@ -76,7 +77,7 @@ class GameSystemTest {
 
     private fun newGame(
         first: Player,
-        second: Player = Player("id-tanya", "Таня")
+        second: Player = Player("Таня")
     ): GameSession = GameSession(
         1,
         listOf(first, second),

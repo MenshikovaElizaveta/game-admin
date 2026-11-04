@@ -57,12 +57,12 @@ class AuctionService {
 
         while (true) {
             val bidder = bidders.firstOrNull {
-                it.id !in passed && it.id !in askedSinceLastBid && it.balance > highBid
+                it.name !in passed && it.name !in askedSinceLastBid && it.balance > highBid
             } ?: break
             val bid = requestBid(bidder, property, highBid)
             if (bid == null || bid == 0) {
-                passed += bidder.id
-                askedSinceLastBid += bidder.id
+                passed += bidder.name
+                askedSinceLastBid += bidder.name
                 continue
             }
             if (bid <= highBid || bid > bidder.balance) {
@@ -71,7 +71,7 @@ class AuctionService {
             }
             highBid = bid
             winner = bidder
-            askedSinceLastBid = mutableSetOf(bidder.id)
+            askedSinceLastBid = mutableSetOf(bidder.name)
         }
 
         if (winner != null) {
