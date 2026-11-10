@@ -8,7 +8,6 @@ class MoveDescriptionBuilder {
     fun passedStart() { descriptions += "Игрок прошёл клетку «старт» и получил 200 М" }
     fun cellEffect(text: String) { descriptions += text }
     fun cardDrawn(text: String) { descriptions += "Вытянута карточка: $text" }
-    fun cardEffect(text: String) { descriptions += "Эффект карточки: $text" }
     fun boughtProperty(name: String, price: Int) { descriptions += "Куплена недвижимость «$name» за $price М" }
     fun builtHouse(name: String, amount: Int) { descriptions += "Построен дом на «$name» за $amount М" }
     fun soldHouse(name: String, amount: Int) { descriptions += "Продан дом на «$name», получено $amount М" }

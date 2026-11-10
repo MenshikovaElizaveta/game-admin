@@ -19,7 +19,7 @@ class PlayerTest {
     }
 
     @Test
-    fun playerStoresRailroadsAndUtilitiesInSeparateLists() {
+    fun playerReturnsPropertiesByType() {
         val player = Player("Саша")
         val railroad = Railroad(5, "Рижская железная дорога")
         val utility = Utility(12, "электростанция")

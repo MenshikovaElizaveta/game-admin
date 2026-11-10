@@ -2,13 +2,13 @@ package monopoly.domain.model
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import monopoly.domain.model.property.PropertyColor
+import monopoly.domain.model.property.StreetColor
 import monopoly.domain.model.property.Street
 
 class StreetTest {
     @Test
     fun streetSupportsMaximumFiveHouses() {
-        val street = Street(1, "Житная ул", 60, 50, listOf(2, 10, 30, 90, 160, 250), PropertyColor.BROWN)
+        val street = Street(1, "Житная ул", 60, 50, listOf(2, 10, 30, 90, 160, 250), StreetColor.BROWN)
 
         repeat(5) { street.buildHouse() }
 
@@ -18,7 +18,7 @@ class StreetTest {
 
     @Test
     fun sellingHouseDecreasesHouseCount() {
-        val street = Street(1, "Житная ул", 60, 50, listOf(2, 10, 30, 90, 160, 250), PropertyColor.BROWN)
+        val street = Street(1, "Житная ул", 60, 50, listOf(2, 10, 30, 90, 160, 250), StreetColor.BROWN)
         street.buildHouse()
         street.sellHouse()
 

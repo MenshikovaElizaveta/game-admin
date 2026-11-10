@@ -9,8 +9,4 @@ class InMemoryGameHistoryRepository : GameHistoryRepository {
     override fun save(summary: GameSummary) { history += summary }
 
     override fun findAll(): List<GameSummary> = history.toList()
-
-    override fun findById(gameId: Int): GameSummary? {
-        return history.firstOrNull { it.gameId == gameId }
-    }
 }

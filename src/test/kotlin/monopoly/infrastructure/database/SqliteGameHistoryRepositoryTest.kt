@@ -53,7 +53,7 @@ class SqliteGameHistoryRepositoryTest {
 
         assertEquals(
             "Таня",
-            gameHistory.findById(1)!!.winnerName
+            gameHistory.findAll().single { it.gameId == 1 }.winnerName
         )
 
         assertEquals(

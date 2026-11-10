@@ -16,26 +16,23 @@ class Player(
     var bankrupt: Boolean = false
 
     val properties: MutableList<Property> = mutableListOf()
-    val railroads: MutableList<Railroad> = mutableListOf()
-    val utilities: MutableList<Utility> = mutableListOf()
+
+    val streets: List<Street>
+        get() = properties.filterIsInstance<Street>()
+
+    val railroads: List<Railroad>
+        get() = properties.filterIsInstance<Railroad>()
+
+    val utilities: List<Utility>
+        get() = properties.filterIsInstance<Utility>()
 
     fun addProperty(property: Property) {
         if (!properties.contains(property)) properties += property
-        when (property) {
-            is Railroad -> if (!railroads.contains(property)) railroads += property
-            is Utility -> if (!utilities.contains(property)) utilities += property
-        }
         property.owner = this
     }
 
     fun removeProperty(property: Property) {
         properties.remove(property)
-        when (property) {
-            is Railroad -> railroads.remove(property)
-            is Utility -> utilities.remove(property)
-        }
-        if (property.owner === this) property.owner = null
+        if (property.owner == this) property.owner = null
     }
-
-    fun streets(): List<Street> = properties.filterIsInstance<Street>()
 }

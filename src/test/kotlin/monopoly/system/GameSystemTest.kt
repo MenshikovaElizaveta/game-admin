@@ -70,7 +70,10 @@ class GameSystemTest {
         gameRepository.delete(game.id)
 
         assertEquals(1, statisticsRepository.findByName(tanya.name)!!.wins)
-        assertEquals(tanya.name, gameHistoryRepository.findById(game.id)!!.winnerName)
+        assertEquals(
+            tanya.name,
+            gameHistoryRepository.findAll().single { it.gameId == game.id }.winnerName
+        )
         assertEquals(1, moveHistoryRepository.findByGameId(game.id)!!.moveCount)
         assertEquals(null, gameRepository.findById(game.id))
     }

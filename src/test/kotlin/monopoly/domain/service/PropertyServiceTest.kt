@@ -3,11 +3,11 @@ package monopoly.domain.service
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import monopoly.domain.model.Player
-import monopoly.domain.model.property.PropertyColor
+import monopoly.domain.model.property.StreetColor
 import monopoly.domain.model.property.Street
 
 class PropertyServiceTest {
-    private fun street(number: Int, color: PropertyColor = PropertyColor.BROWN) =
+    private fun street(number: Int, color: StreetColor = StreetColor.BROWN) =
         Street(number, "Улица $number", 60, 50, listOf(2, 10, 30, 90, 160, 250), color)
 
     @Test

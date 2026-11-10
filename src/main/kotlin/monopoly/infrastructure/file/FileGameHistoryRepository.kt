@@ -38,8 +38,9 @@ class FileGameHistoryRepository(
     }
 
     override fun findAll(): List<GameSummary> {
-        return load()
-            .stringPropertyNames()
+        val properties = load()
+
+        return properties.stringPropertyNames()
             .filter { key ->
                 key.startsWith("game.") && key.endsWith(".players")
             }
@@ -47,24 +48,18 @@ class FileGameHistoryRepository(
                 val id = key
                     .removePrefix("game.")
                     .removeSuffix(".players")
-                    .toIntOrNull()
+                    .toIntOrNull() ?: return@mapNotNull null
 
-                id?.let(::findById)
+                val prefix = "game.$id."
+                val players = properties.getProperty(prefix + "players")
+
+                GameSummary(
+                    id,
+                    players.split("|").filter { it.isNotBlank() },
+                    properties.getProperty(prefix + "moves", "0").toInt(),
+                    properties.getProperty(prefix + "winner", "—"),
+                )
             }
             .sortedBy { it.gameId }
-    }
-
-    override fun findById(gameId: Int): GameSummary? {
-        val properties = load()
-        val prefix = "game.$gameId."
-        val players = properties.getProperty(prefix + "players")
-            ?: return null
-
-        return GameSummary(
-            gameId,
-            players.split("|").filter { it.isNotBlank() },
-            properties.getProperty(prefix + "moves", "0").toInt(),
-            properties.getProperty(prefix + "winner", "—"),
-        )
     }
 }

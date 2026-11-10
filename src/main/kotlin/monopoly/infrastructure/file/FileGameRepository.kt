@@ -238,7 +238,7 @@ class FileGameRepository(
             .toBoolean()
 
         if (!properties.getProperty("active", "true").toBoolean()) {
-            game.finish()
+            game.active = false
         }
 
         return game

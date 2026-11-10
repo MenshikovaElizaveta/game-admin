@@ -61,7 +61,4 @@ class SqliteGameHistoryRepository(
                 }
             }
         }
-
-    override fun findById(gameId: Int): GameSummary? =
-        findAll().firstOrNull { summary -> summary.gameId == gameId }
 }

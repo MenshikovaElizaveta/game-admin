@@ -1,6 +1,6 @@
 package monopoly.domain.model.property
 
-enum class PropertyColor {
+enum class StreetColor {
     BROWN,
     LIGHT_BLUE,
     PINK,

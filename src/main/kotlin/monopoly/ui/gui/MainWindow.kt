@@ -8,7 +8,6 @@ import monopoly.domain.repository.*
 import monopoly.domain.service.*
 import monopoly.infrastructure.file.*
 import java.awt.*
-import java.io.File
 import javax.swing.*
 import javax.swing.border.EmptyBorder
 import javax.swing.table.DefaultTableModel
@@ -23,7 +22,6 @@ class MainWindow : JFrame("Monopoly") {
     private val statistics: PlayerStatisticsRepository = FilePlayerStatisticsRepository()
     private val history: GameHistoryRepository = FileGameHistoryRepository()
     private val moveHistory: MoveHistoryRepository = FileMoveHistoryRepository()
-    private val bankruptcyService = BankruptcyService()
     private var game: GameSession? = null
     private var gameFinished = false
     private val pendingMoveDescriptions = mutableMapOf<String, MutableList<String>>()
@@ -355,7 +353,7 @@ class MainWindow : JFrame("Monopoly") {
             }
             CellType.CHANCE, CellType.COMMUNITY_CHEST -> {
                 val deck = if (cell.type == CellType.CHANCE) g.chanceDeck else g.communityChestDeck
-                val result = CardService().draw(player, deck)
+                val result = CardService.drawAndApply(player, deck)
                 message("Карточка: ${result.card.text}")
                 descriptions += "Вытянута карточка: ${result.card.text}"
                 when (val card = result.card) {
@@ -486,7 +484,7 @@ class MainWindow : JFrame("Monopoly") {
     }
 
     private fun selectAndSellHouse(player: Player) {
-        val streets = player.streets().filter { it.houses > 0 }
+        val streets = player.streets.filter { it.houses > 0 }
         if (streets.isEmpty()) { message("Нет улиц с домами."); return }
         chooseProperty(streets.map { "${it.name} — ${it.houseCost / 2} М за дом (домов: ${it.houses})" to it }) {
             PropertyService.sellHouse(player, it as Street)
@@ -512,9 +510,9 @@ class MainWindow : JFrame("Monopoly") {
         val descriptions = moveDescriptions ?: mutableListOf()
         descriptions += "Игрок ${player.name} объявил себя банкротом${if (creditor == null) " перед банком" else "; имущество передано ${creditor.name}"}."
         if (creditor == null) {
-            val lots = bankruptcyService.bankruptToBank(player, player.properties.toList())
+            val lots = BankruptcyService.bankruptToBank(player)
             lots.forEach { property -> runAuction(property, descriptions) }
-        } else bankruptcyService.bankruptToPlayer(player, creditor)
+        } else BankruptcyService.bankruptToPlayer(player, creditor)
         if (recordAndAdvance) {
             recordMove(player, descriptions)
             advanceOrFinish()
@@ -527,7 +525,7 @@ class MainWindow : JFrame("Monopoly") {
         val selected = options.getOrNull(choice) ?: return
         try {
             when (selected) {
-                options[0] -> chooseProperty(player.streets().filter { GameRules.canBuild(player, it) }.map { "${it.name} — дом за ${it.houseCost} М (${it.houses}/5)" to it }) { PropertyService.buildHouse(player, it as Street) }
+                options[0] -> chooseProperty(player.streets.filter { GameRules.canBuild(player, it) }.map { "${it.name} — дом за ${it.houseCost} М (${it.houses}/5)" to it }) { PropertyService.buildHouse(player, it as Street) }
                 options[1] -> selectAndSellHouse(player)
                 options[2] -> selectAndMortgage(player)
                 options[3] -> chooseProperty(player.properties.filter { it.mortgaged && player.balance >= it.unmortgageCost }.map { "${it.name} — снять залог за ${it.unmortgageCost} М" to it }) {
@@ -579,7 +577,7 @@ class MainWindow : JFrame("Monopoly") {
         if (winner != null) {
             if (!gameFinished) {
                 gameFinished = true
-                g.finish()
+                g.active = false
                 history.save(GameSummary(g.id, g.players.map { it.name }, g.moveHistory.moveCount, winner.name))
                 g.players.forEach { player ->
                     val stat = statistics.findByName(player.name) ?: PlayerStatistics(player.name)
