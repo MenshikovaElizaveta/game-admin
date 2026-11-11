@@ -4,6 +4,8 @@ import monopoly.infrastructure.database.*
 import monopoly.ui.ConsoleInput
 import monopoly.ui.ConsoleOutput
 import monopoly.ui.GameMenu
+import monopoly.ui.gui.MainWindow
+import javax.swing.SwingUtilities
 
 class GameApplication(
     private val input: ConsoleInput = ConsoleInput(),
@@ -24,7 +26,13 @@ class GameApplication(
         moveHistoryRepository
     )
 
-    fun run() {
-        menu.showMainMenu()
+    fun run(args: Array<String> = emptyArray()) {
+        if (args.contains("gui")) {
+            SwingUtilities.invokeLater {
+                MainWindow().isVisible = true
+            }
+        } else {
+            menu.showMainMenu()
+        }
     }
 }

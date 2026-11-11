@@ -1,5 +1,5 @@
 import monopoly.application.GameApplication
 
-fun main() {
-    GameApplication().run()
+fun main(args: Array<String>) {
+    GameApplication().run(args)
 }
