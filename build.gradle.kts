@@ -32,3 +32,9 @@ tasks.jar {
         attributes["Main-Class"] = "MainKt"
     }
 }
+
+tasks.register<JavaExec>("runGui") {
+    group = "application"
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set("monopoly.ui.gui.GuiMainKt")
+}

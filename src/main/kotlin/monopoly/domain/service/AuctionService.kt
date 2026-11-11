@@ -39,4 +39,48 @@ class AuctionService {
             }
         }
     }
+
+    fun auctionSingle(
+        property: Property,
+        players: List<Player>,
+        requestBid: (Player, Property, Int) -> Int?,
+        onMessage: ((String) -> Unit)? = null,
+    ): Player? {
+        if (property.owner != null) return property.owner
+        val bidders = players.filter { !it.bankrupt && it.balance > 0 }
+        if (bidders.isEmpty()) return null
+
+        var highBid = 0
+        var winner: Player? = null
+        val passed = mutableSetOf<String>()
+        var askedSinceLastBid = mutableSetOf<String>()
+
+        while (true) {
+            val bidder = bidders.firstOrNull {
+                it.id !in passed && it.id !in askedSinceLastBid && it.balance > highBid
+            } ?: break
+            val bid = requestBid(bidder, property, highBid)
+            if (bid == null || bid == 0) {
+                passed += bidder.id
+                askedSinceLastBid += bidder.id
+                continue
+            }
+            if (bid <= highBid || bid > bidder.balance) {
+                onMessage?.invoke("Ставка должна быть больше $highBid М и не превышать баланс ${bidder.balance} М.")
+                continue
+            }
+            highBid = bid
+            winner = bidder
+            askedSinceLastBid = mutableSetOf(bidder.id)
+        }
+
+        if (winner != null) {
+            winner.balance -= highBid
+            winner.addProperty(property)
+            onMessage?.invoke("«${property.name}» куплена игроком ${winner.name} за $highBid М.")
+        } else {
+            onMessage?.invoke("Лот «${property.name}» остался без владельца.")
+        }
+        return winner
+    }
 }
