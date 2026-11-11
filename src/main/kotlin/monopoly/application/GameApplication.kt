@@ -1,14 +1,6 @@
 package monopoly.application
 
-import monopoly.infrastructure.database.SqliteDatabase
-import monopoly.infrastructure.database.SqliteGameHistoryRepository
-import monopoly.infrastructure.database.SqliteGameRepository
-import monopoly.infrastructure.database.SqliteMoveHistoryRepository
-import monopoly.infrastructure.database.SqlitePlayerStatisticsRepository
-import monopoly.infrastructure.file.FileGameRepository
-import monopoly.infrastructure.file.FilePlayerStatisticsRepository
-import monopoly.infrastructure.file.FileGameHistoryRepository
-import monopoly.infrastructure.file.FileMoveHistoryRepository
+import monopoly.infrastructure.database.*
 import monopoly.ui.ConsoleInput
 import monopoly.ui.ConsoleOutput
 import monopoly.ui.GameMenu

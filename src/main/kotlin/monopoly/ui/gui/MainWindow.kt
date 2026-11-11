@@ -6,7 +6,7 @@ import monopoly.domain.model.cell.*
 import monopoly.domain.model.property.*
 import monopoly.domain.repository.*
 import monopoly.domain.service.*
-import monopoly.infrastructure.file.*
+import monopoly.infrastructure.database.*
 import java.awt.*
 import javax.swing.*
 import javax.swing.border.EmptyBorder
@@ -18,10 +18,11 @@ class MainWindow : JFrame("Monopoly") {
     private val gold = Color(196, 155, 61)
     private val darkText = Color(35, 39, 36)
     private val screens = JPanel(CardLayout())
-    private val games: GameRepository = FileGameRepository()
-    private val statistics: PlayerStatisticsRepository = FilePlayerStatisticsRepository()
-    private val history: GameHistoryRepository = FileGameHistoryRepository()
-    private val moveHistory: MoveHistoryRepository = FileMoveHistoryRepository()
+    private val database = SqliteDatabase()
+    private val games: GameRepository = SqliteGameRepository(database = database)
+    private val statistics: PlayerStatisticsRepository = SqlitePlayerStatisticsRepository(database)
+    private val history: GameHistoryRepository = SqliteGameHistoryRepository(database)
+    private val moveHistory: MoveHistoryRepository = SqliteMoveHistoryRepository(database)
     private var game: GameSession? = null
     private var gameFinished = false
     private val pendingMoveDescriptions = mutableMapOf<String, MutableList<String>>()

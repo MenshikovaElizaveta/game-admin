@@ -1,6 +1,6 @@
 package monopoly.domain.model
 
-class GameSummary(
+data class GameSummary(
     val gameId: Int,
     val playerNames: List<String>,
     val moveCount: Int,
