@@ -25,10 +25,8 @@ import monopoly.domain.service.CardService
 import monopoly.domain.service.DebtService
 import monopoly.domain.service.GameRules
 import monopoly.domain.service.MoveDescriptionBuilder
-import monopoly.domain.service.MoveService
 import monopoly.domain.service.MovementService
 import monopoly.domain.service.PropertyService
-import java.util.UUID
 
 class GameMenu(
     private val input: ConsoleInput,
@@ -38,11 +36,6 @@ class GameMenu(
     private val gameHistoryRepository: GameHistoryRepository,
     private val moveHistoryRepository: MoveHistoryRepository,
 ) {
-    private val auctionService = AuctionService()
-    private val bankruptcyService = BankruptcyService()
-    private val cardService = CardService()
-    private val moveService = MoveService()
-
     fun showMainMenu() {
         while (true) {
             output.println()
@@ -82,9 +75,7 @@ class GameMenu(
                     continue
                 }
 
-                val statistics = statisticsRepository.findByName(name)
-                val playerId = statistics?.playerId ?: UUID.randomUUID().toString()
-                players += Player(playerId, name)
+                players += Player(name)
                 break
             }
         }
@@ -194,13 +185,13 @@ class GameMenu(
         if (player.atFreeParking) {
             player.atFreeParking = false
             builder.cellEffect("Игрок пропустил ход после бесплатной стоянки.")
-            saveMove(game, moveService.createMove(moveNumber, player, builder))
+            saveMove(game, Move(moveNumber, player.name, builder.result()))
             return true
         }
 
         if (player.inJail) {
             handleJail(game, player, builder)
-            saveMove(game, moveService.createMove(moveNumber, player, builder))
+            saveMove(game,Move(moveNumber, player.name, builder.result()))
             return true
         }
 
@@ -210,7 +201,7 @@ class GameMenu(
         if (passedStart) builder.passedStart()
         addLandingDescription(game, player, builder)
         handleCell(game, player, builder, dice.first + dice.second)
-        saveMove(game, moveService.createMove(moveNumber, player, builder))
+        saveMove(game, Move(moveNumber, player.name, builder.result()))
         return true
     }
 
@@ -242,7 +233,7 @@ class GameMenu(
             output.println("1 — Бросить кубики")
             if (player.balance >= GameRules.JAIL_FINE) output.println("2 — Заплатить штраф 50 М")
             if (DebtService.availableProperties(player).isNotEmpty()) output.println("3 — Заложить недвижимость")
-            if (player.streets().any { it.houses > 0 }) output.println("4 — Продать дом")
+            if (player.streets.any { it.houses > 0 }) output.println("4 — Продать дом")
             output.println("5 — Объявить себя банкротом")
 
             when (input.readLine().trim()) {
@@ -449,7 +440,7 @@ class GameMenu(
                 "2" -> sellHouseMenu(debtor, builder)
                 "3" -> mortgageMenu(debtor, builder)
                 "4" -> {
-                    bankruptcyService.bankruptToPlayer(debtor, creditor)
+                    BankruptcyService.bankruptToPlayer(debtor, creditor)
                     builder.bankruptcy(debtor.name)
                     return
                 }
@@ -487,7 +478,7 @@ class GameMenu(
     }
 
     private fun handleCard(game: GameSession, player: Player, deck: Deck, builder: MoveDescriptionBuilder) {
-        val result = cardService.draw(player, deck)
+        val result = CardService.drawAndApply(player, deck)
         output.println("Вытянута карточка: ${result.card.text}")
         builder.cardDrawn(result.card.text)
         when (val card = result.card) {
@@ -506,7 +497,7 @@ class GameMenu(
     }
 
     private fun buildHouseMenu(player: Player, builder: MoveDescriptionBuilder) {
-        val streets = player.streets().filter { GameRules.canBuild(player, it) }
+        val streets = player.streets.filter { GameRules.canBuild(player, it) }
         if (streets.isEmpty()) {
             output.println("Нет улиц, на которых можно построить дом.")
             return
@@ -521,7 +512,7 @@ class GameMenu(
     }
 
     private fun sellHouseMenu(player: Player, builder: MoveDescriptionBuilder) {
-        val streets = player.streets().filter { it.houses > 0 }
+        val streets = player.streets.filter { it.houses > 0 }
         if (streets.isEmpty()) {
             output.println("Нет улиц с домами.")
             return
@@ -572,7 +563,7 @@ class GameMenu(
     }
 
     private fun startAuction(game: GameSession, properties: List<Property>,  builder: MoveDescriptionBuilder) {
-        auctionService.auction(
+        AuctionService.auction(
             properties = properties,
             players = game.players,
             readLine = { prompt ->
@@ -587,8 +578,7 @@ class GameMenu(
     }
 
     private fun bankruptToBank(game: GameSession, player: Player, builder: MoveDescriptionBuilder) {
-        val properties = player.properties.toList()
-        val lots = bankruptcyService.bankruptToBank(player, properties)
+        val lots = BankruptcyService.bankruptToBank(player)
         builder.bankruptcy(player.name)
         if (lots.isNotEmpty()) startAuction(game, lots, builder)
     }
@@ -597,17 +587,17 @@ class GameMenu(
         game.moveHistory.add(move)
         moveHistoryRepository.save(game.moveHistory)
         gameRepository.save(game)
-        if (game.winner() != null) game.finish()
+        if (game.winner() != null) game.active = false
     }
 
     private fun finishGame(game: GameSession) {
         val winner = game.winner() ?: return
         output.println("Победил игрок ${winner.name}")
         game.players.forEach { player ->
-            val statistics = statisticsRepository.findByPlayerId(player.id)
-                ?: PlayerStatistics(player.id, player.name)
+            val statistics = statisticsRepository.findByName(player.name)
+                ?: PlayerStatistics(player.name)
             statistics.gamesPlayed++
-            if (player.id == winner.id) statistics.wins++
+            if (player.name.equals(winner.name, ignoreCase = true)) statistics.wins++
             statisticsRepository.save(statistics)
         }
         gameHistoryRepository.save(
@@ -633,8 +623,13 @@ class GameMenu(
             output.println("${game.id} — ${game.players.joinToString(", ") { it.name }}")
         }
         output.println("Введите номер игры или 0 для возврата:")
-        val id = input.readLine().trim()
-        if (id == "0") return
+        val id = input.readLine().trim().toIntOrNull()
+        if (id == null) {
+            output.println("Некорректный номер игры.")
+            return
+        }
+        if (id == 0) return
+
         val game = gameRepository.findById(id)
         if (game == null) {
             output.println("Игра не найдена.")
@@ -669,7 +664,13 @@ class GameMenu(
 
     private fun showMoveHistory() {
         output.println("Введите номер игры:")
-        val id = input.readLine().trim()
+        val id = input.readLine().trim().toIntOrNull()
+
+        if (id == null) {
+            output.println("Некорректный номер игры.")
+            return
+        }
+
         val history: MoveHistory? = moveHistoryRepository.findByGameId(id)
         if (history == null) {
             output.println("История ходов не найдена.")

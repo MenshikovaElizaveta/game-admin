@@ -8,7 +8,7 @@ class Street(
     override val price: Int,
     val houseCost: Int,
     val rent: List<Int>,
-    val color: PropertyColor,
+    val color: StreetColor,
 ) : Property {
     override var owner: Player? = null
     override var mortgaged: Boolean = false

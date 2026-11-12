@@ -8,7 +8,7 @@ import monopoly.domain.model.property.Utility
 class PlayerTest {
     @Test
     fun playerStartsWithExpectedState() {
-        val player = Player("1", "Саша")
+        val player = Player("Саша")
 
         assertEquals(1500, player.balance)
         assertEquals(0, player.position)
@@ -19,8 +19,8 @@ class PlayerTest {
     }
 
     @Test
-    fun playerStoresRailroadsAndUtilitiesInSeparateLists() {
-        val player = Player("1", "Саша")
+    fun playerReturnsPropertiesByType() {
+        val player = Player("Саша")
         val railroad = Railroad(5, "Рижская железная дорога")
         val utility = Utility(12, "электростанция")
 

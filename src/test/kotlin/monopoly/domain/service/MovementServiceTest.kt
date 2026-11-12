@@ -7,7 +7,7 @@ import monopoly.domain.model.Player
 class MovementServiceTest {
     @Test
     fun passingStartGivesTwoHundred() {
-        val player = Player("1", "Саша")
+        val player = Player("Саша")
         player.position = 35
 
         MovementService.move(player, 6)
@@ -18,7 +18,7 @@ class MovementServiceTest {
 
     @Test
     fun movementToJailDoesNotGiveStartReward() {
-        val player = Player("1", "Саша")
+        val player = Player("Саша")
         player.position = 36
 
         MovementService.moveTo(player, 30, rewardForPassingStart = false)

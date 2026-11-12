@@ -4,7 +4,11 @@ import monopoly.domain.model.MoveHistory
 import monopoly.domain.repository.MoveHistoryRepository
 
 class InMemoryMoveHistoryRepository : MoveHistoryRepository {
-    private val histories = mutableMapOf<String, MoveHistory>()
-    override fun save(history: MoveHistory) { histories[history.gameId] = history }
-    override fun findByGameId(gameId: String): MoveHistory? = histories[gameId]
+    private val histories = mutableMapOf<Int, MoveHistory>()
+
+    override fun save(history: MoveHistory) {
+        histories[history.gameId] = history
+    }
+
+    override fun findByGameId(gameId: Int): MoveHistory? = histories[gameId]
 }

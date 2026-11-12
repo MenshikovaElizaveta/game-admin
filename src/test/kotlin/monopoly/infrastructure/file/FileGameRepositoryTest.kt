@@ -17,25 +17,40 @@ class FileGameRepositoryTest {
     fun `game state survives repository recreation`() {
         val directory = Files.createTempDirectory("games-test").toFile()
         val repository = FileGameRepository(directory)
-        val players = listOf(Player("p1", "Саша"), Player("p2", "Таня"))
+        val players = listOf(Player("Саша"), Player("Таня"))
         val board = CellFactory.createBoard()
-        val game = GameSession("test-game", players, board, CardFactory.createChanceDeck(), CardFactory.createCommunityChestDeck())
+        val game = GameSession(
+            1,
+            players,
+            board,
+            CardFactory.createChanceDeck(),
+            CardFactory.createCommunityChestDeck()
+        )
+
         players[0].balance = 1234
         players[0].position = 24
+
         val property = board.getCell(24).property as Street
         PropertyService.buy(players[0], property)
         property.buildHouse()
         property.mortgaged = false
+
         val chanceOrder = listOf(2, 1, 3, 4, 5, 6, 7, 8, 9, 10)
         game.chanceDeck.reorder(chanceOrder)
         game.chanceDeck.draw()
+
         game.turnInProgress = true
         game.moveToNextActivePlayer()
         game.turnInProgress = true
+
         game.moveHistory.add(Move(1, "Саша", listOf("Проверочный ход")))
+
         repository.save(game)
 
-        val restored = assertNotNull(FileGameRepository(directory).findById("test-game"))
+        val restored = assertNotNull(
+            FileGameRepository(directory).findById(1)
+        )
+
         assertEquals("Таня", restored.currentPlayer.name)
         assertEquals(true, restored.turnInProgress)
         assertEquals(994, restored.players[0].balance)
@@ -52,8 +67,8 @@ class FileGameRepositoryTest {
         val directory = Files.createTempDirectory("game-numbers-test").toFile()
         val repository = FileGameRepository(directory)
 
-        assertEquals("1", repository.nextId())
-        assertEquals("2", repository.nextId())
-        assertEquals("3", FileGameRepository(directory).nextId())
+        assertEquals(1, repository.nextId())
+        assertEquals(2, repository.nextId())
+        assertEquals(3, FileGameRepository(directory).nextId())
     }
 }

@@ -9,10 +9,9 @@ data class CardResult(
     val movedToJail: Boolean = false,
 )
 
-class CardService {
-    fun draw(player: Player, deck: Deck): CardResult {
-        val card = deck.draw()
-        return when (card) {
+object CardService {
+    fun drawAndApply(player: Player, deck: Deck): CardResult {
+        return when (val card = deck.draw()) {
             is IncomeCard -> {
                 player.balance += card.amount
                 CardResult(card)
@@ -35,7 +34,8 @@ class CardService {
                 val destination = card.destinations
                     .sorted()
                     .firstOrNull { it > player.position }
-                    ?: card.destinations.minOrNull()!!
+                    ?: card.destinations.minOrNull()
+                    ?: error("У карточки не указаны возможные клетки")
                 CardResult(
                     card,
                     passedStart = MovementService.moveTo(player, destination, card.passesStartReward),

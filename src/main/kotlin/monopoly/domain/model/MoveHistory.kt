@@ -1,7 +1,7 @@
 package monopoly.domain.model
 
 class MoveHistory(
-    val gameId: String,
+    val gameId: Int,
     val moves: MutableList<Move> = mutableListOf(),
 ) {
     val moveCount: Int
